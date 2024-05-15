@@ -1,93 +1,72 @@
-# Lethal Company Mod Template
+# Lethal Model Switcher
+---
 
-Thank you for using the mod template! Here are a few tips to help you on your journey:
+Thank you for using the Lethal Model Switcher library! This library simplifies the process of switching models in the game Lethal Company. Below are instructions on how to use this library for your own model mod.
 
-## Versioning
+## Upcoming Features
+---
 
-BepInEx uses [semantic versioning, or semver](https://semver.org/), for the mod's version info.
-To increment it, you can either modify the version tag in the `.csproj` file directly, or use your IDE's UX to increment the version. Below is an example of modifying the `.csproj` file directly:
+- Enhanced UI for model selection.
+- API for customizing model switching behavior.
+- Support for animations and effects.
+- Better wiki documentation and examples here on GitHub.
+- General improvements and bug fixes based on user feedback.
 
-```xml
-<!-- BepInEx Properties -->
-<PropertyGroup>
-    <AssemblyName>LethalModelSwitcher</AssemblyName>
-    <Product>LethalModelSwitcher</Product>
-    <!-- Change to whatever version you're currently on. -->
-    <Version>1.0.0</Version>
-</PropertyGroup>
-```
+## Using LethalModelSwitcher Library
+---
 
-Your IDE will have the setting in `Package` or `NuGet` under `General` or `Metadata`, respectively.
+To use this library in your own model mod, you need to ensure the following:
 
-## Logging
+### Add Dependencies
 
-A logger is provided to help with logging to the console.
-You can access it by doing `Plugin.Logger` in any class outside the `Plugin` class.
+Make sure you have the following dependencies installed:
+- [Lethal-Company-More-Suits](https://thunderstore.io/c/lethal-company/p/x753/More_Suits/)
+- [ModelReplacementAPI](https://thunderstore.io/c/lethal-company/p/BunyaPineTree/ModelReplacementAPI/)
 
-***Please use*** `LogDebug()` ***whenever possible, as any other log method
-will be displayed to the console and potentially cause performance issues for users.***
-
-If you chose to do so, make sure you change the following line in the `BepInEx.cfg` file to see the Debug messages:
-
-```toml
-[Logging.Console]
-
-# ... #
-
-## Which log levels to show in the console output.
-# Setting type: LogLevel
-# Default value: Fatal, Error, Warning, Message, Info
-# Acceptable values: None, Fatal, Error, Warning, Message, Info, Debug, All
-# Multiple values can be set at the same time by separating them with , (e.g. Debug, Warning)
-LogLevels = All
-```
-
-## Harmony
-
-This template uses harmony. For more specifics on how to use it, look at
-[the HarmonyX GitHub wiki](https://github.com/BepInEx/HarmonyX/wiki) and
-[the Harmony docs](https://harmony.pardeike.net/).
-
-To make a new harmony patch, just use `[HarmonyPatch]` before any class you make that has a patch in it.
-
-Then in that class, you can use
-`[HarmonyPatch(typeof(ClassToPatch), "MethodToPatch")]`
-where `ClassToPatch` is the class you're patching (ie `TVScript`), and `MethodToPatch` is the method you're patching (ie `SwitchTVLocalClient`).
-
-Then you can use
-[the appropriate prefix, postfix, transpiler, or finalizer](https://harmony.pardeike.net/articles/patching.html) attribute.
-
-_While you can use_ `return false;` _in a prefix patch,
-it is **HIGHLY DISCOURAGED** as it can **AND WILL** cause compatibility issues with other mods._
-
-For example, we want to add a patch that will debug log the current players' position.
-We have the following postfix patch patching the `SwitchTVLocalClient` method
-in `TVScript`:
+Add the following dependencies to your mod:
 
 ```csharp
-using HarmonyLib;
-
-namespace LethalModelSwitcher.Patches;
-
-[HarmonyPatch(typeof(TVScript))]
-public class ExampleTVPatch
-{
-    [HarmonyPatch("SwitchTVLocalClient")]
-    [HarmonyPrefix]
-    private static void SwitchTvPrefix(TVScript __instance)
-    {
-        /*
-         *  When the method is called, the TV will be turning off when we want to
-         *  turn the lights on and vice-versa. At that time, the TV's tvOn field
-         *  will be the opposite of what it's doing, ie it'll be on when turning off.
-         *  So, we want to set the lights to what the tv's state was
-         *  when this method is called.
-         */
-        StartOfRound.Instance.shipRoomLights.SetShipLightsBoolean(__instance.tvOn);
-    }
-}
+[BepInDependency("x753.More_Suits")]
+[BepInDependency("nordbo.LethalModelSwitcher")]
 ```
 
-In this case we include the type of the class we're patching in the attribute
-before our `ExampleTVPatch` class,
-as our class will only patch the `TVScript` class.
+### Load Asset Bundle
+
+Ensure you load your asset bundle containing the models and sounds.
+
+### Register Models
+
+Use the `ModelManager` class to register your models with the appropriate suit names.
+
+Load the asset bundle and register models in the `Awake` method of your mod:
+
+```csharp
+    private void Awake()
+    {
+        // Load the asset bundle
+        AssetLoader.LoadAssetBundle("lethalmodelswitchingbundle");
+
+        // Load assets from the bundle
+        var niceSound = AssetLoader.LoadAudioClip("niceSound");
+        var veryNiceSound = AssetLoader.LoadAudioClip("veryNiceSound");
+        var coolModel = AssetLoader.LoadPrefab("coolModel");
+        var veryCoolModel = AssetLoader.LoadPrefab("veryCoolModel");
+
+        // Register suit names, model names, and assets
+ModelManager.RegisterBaseModel("SuitName", "ModelName", typeof(ModelType), audioClip, modelPrefab);
+ModelManager.RegisterModelVariant("BaseSuitName", "VariantName", typeof(VariantType), audioClip, modelPrefab);
+    }
+```
+
+You can register models using the `ModelManager` class methods:
+
+```csharp
+ModelManager.RegisterBaseModel("SuitName", "ModelName", typeof(ModelType), audioClip, modelPrefab);
+ModelManager.RegisterModelVariant("BaseSuitName", "VariantName", typeof(VariantType), audioClip, modelPrefab);
+```
+
+Replace `"SuitName"`, `"ModelName"`, and other placeholders with your actual suit and model names, types, and assets.
+
+By following these steps, you can easily integrate and use the `LethalModelSwitcher` library to manage model switching in your Lethal Company mods.
+
+---
