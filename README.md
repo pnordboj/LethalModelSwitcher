@@ -58,8 +58,8 @@ Load the asset bundle and register models in the `Awake` method of your mod:
         var veryCoolModel = AssetLoader.LoadPrefab("veryCoolModel");
 
         // Register suit names, model names, and assets
-ModelManager.RegisterBaseModel("SuitName", "ModelName", typeof(ModelType), audioClip, modelPrefab);
-ModelManager.RegisterModelVariant("BaseSuitName", "VariantName", typeof(VariantType), audioClip, modelPrefab);
+        ModelManager.RegisterBaseModel("SuitName", "ModelName", typeof(ModelType), audioClip, modelPrefab);
+        ModelManager.RegisterModelVariant("BaseSuitName", "VariantName", typeof(VariantType), audioClip, modelPrefab);
     }
 ```
 
