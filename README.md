@@ -2,6 +2,11 @@
 
 Thank you for using the Lethal Model Switcher library! This library simplifies the process of switching models in the game Lethal Company. Below are instructions on how to use this library for your own model mod.
 
+## Features
+- **Model Registration**: Easily register base and variants through the ModelReplacementAPI library
+- **Dynamic UI**: for selecting and previewing models you want to toggle between
+- **Sound Support**: Attatch sounds when toggling between the models
+
 ## Upcoming Features
 
 - Enhanced UI for model selection.
@@ -13,6 +18,9 @@ Thank you for using the Lethal Model Switcher library! This library simplifies t
 ## Using LethalModelSwitcher Library
 
 To use this library in your own model mod, you need to ensure the following:
+
+### Using the library
+Add the `LethalModelSwitcher.dll` file as a reference into your project and your good to go!
 
 ### Add Dependencies
 
@@ -50,8 +58,8 @@ Load the asset bundle and register models in the `Awake` method of your mod:
         var veryCoolModel = AssetLoader.LoadPrefab("veryCoolModel");
 
         // Register suit names, model names, and assets
-ModelManager.RegisterBaseModel("SuitName", "ModelName", typeof(ModelType), audioClip, modelPrefab);
-ModelManager.RegisterModelVariant("BaseSuitName", "VariantName", typeof(VariantType), audioClip, modelPrefab);
+        ModelManager.RegisterBaseModel("SuitName", "ModelName", typeof(ModelType), audioClip, modelPrefab);
+        ModelManager.RegisterModelVariant("BaseSuitName", "VariantName", typeof(VariantType), audioClip, modelPrefab);
     }
 ```
 
@@ -66,4 +74,11 @@ Replace `"SuitName"`, `"ModelName"`, and other placeholders with your actual sui
 
 By following these steps, you can easily integrate and use the `LethalModelSwitcher` library to manage model switching in your Lethal Company mods.
 
+## Credits
+- **ModelReplacementAPI**: Provides the API for model replacements. [ModelReplacementAPI](https://thunderstore.io/c/lethal-company/p/BunyaPineTree/ModelReplacementAPI/).
+- **45x Suit Variants**: Inspiration for this library. [45x Suit Variant](https://thunderstore.io/c/lethal-company/p/45x_Dev/45x_Suit_Variants/).
+
+Special thanks to the Lethal Company modding community for their contributions and support.
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/I2I4XZ2R6)
 ---
