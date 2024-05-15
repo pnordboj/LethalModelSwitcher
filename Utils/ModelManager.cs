@@ -35,6 +35,11 @@ public static class ModelManager
             LethalModelSwitcher.Logger.LogError($"Base suit {baseSuitName} not found. Register the base model first.");
         }
     }
+
+    public static string GetSuitName(int suitId)
+    {
+        return "Suit" + suitId;      
+    }
 }
 
 public class ModelVariant

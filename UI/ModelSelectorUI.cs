@@ -21,6 +21,7 @@ public class ModelSelectorUI : MonoBehaviour
     public Button confirmButton;
     public GameObject lmsCanvasInstance;
     public GameObject buttonPrefab;
+    public GameObject modelPreviewPrefab;
 
     private List<GameObject> modelPreviews = new List<GameObject>();
     private List<Button> dynamicButtons = new List<Button>();
@@ -32,6 +33,10 @@ public class ModelSelectorUI : MonoBehaviour
     private void Awake()
     {
         var lmsCanvasPrefab = AssetLoader.LoadUIPrefab("LMSCanvas");
+        buttonPrefab = AssetLoader.LoadUIPrefab("VariantButtonPrefab");
+        modelPreviewPrefab = AssetLoader.LoadUIPrefab("ModelPreviewPrefab");
+        
+
         if (lmsCanvasPrefab != null)
         {
             lmsCanvasInstance = Instantiate(lmsCanvasPrefab);
@@ -43,9 +48,9 @@ public class ModelSelectorUI : MonoBehaviour
             Debug.LogError("LMSCanvas prefab not found in the asset bundle.");
         }
 
-        prevButton.onClick.AddListener(PreviousPage);
-        nextButton.onClick.AddListener(NextPage);
-        confirmButton.onClick.AddListener(ConfirmSelection);
+        if (prevButton != null) prevButton.onClick.AddListener(PreviousPage);
+        if (nextButton != null) nextButton.onClick.AddListener(NextPage);
+        if (confirmButton != null) confirmButton.onClick.AddListener(ConfirmSelection);
     }
 
     private void AssignUIElements(GameObject lmsCanvasInstance)
@@ -64,9 +69,6 @@ public class ModelSelectorUI : MonoBehaviour
 
         preview = previewPanel?.Find("Preview")?.GetComponent<RawImage>();
         if (preview == null) Debug.LogError("preview not found.");
-
-        previewButton = previewPanel?.Find("Button")?.GetComponent<Button>();
-        if (previewButton == null) Debug.LogError("previewButton not found.");
 
         selectionPanelMain = mainPanel?.transform.Find("SelectionPanelMain");
         if (selectionPanelMain == null) Debug.LogError("selectionPanelMain not found.");
@@ -92,22 +94,37 @@ public class ModelSelectorUI : MonoBehaviour
         pageNumberText = paginationPanel?.Find("page")?.GetComponent<TextMeshProUGUI>();
         if (pageNumberText == null) Debug.LogError("pageNumberText not found.");
 
-        confirmButton = mainPanel?.transform.Find("ConfirmButton")?.GetComponent<Button>();
+        confirmButton = previewPanel?.transform.Find("ConfirmButton")?.GetComponent<Button>();
         if (confirmButton == null) Debug.LogError("confirmButton not found.");
     }
 
+
     public void Open(List<ModelVariant> modelVariants)
     {
-        lmsCanvasInstance.SetActive(true);
-        models = modelVariants;
-        currentPage = 0;
-        selectedModelIndex = -1;
-        UpdatePage();
+        if (lmsCanvasInstance != null)
+        {
+            lmsCanvasInstance.SetActive(true);
+            models = modelVariants;
+            currentPage = 0;
+            selectedModelIndex = -1;
+            UpdatePage();
+        }
+        else
+        {
+            Debug.LogError("lmsCanvasInstance is null when trying to open the model selector.");
+        }
     }
 
     public void Close()
     {
-        lmsCanvasInstance.SetActive(false);
+        if (lmsCanvasInstance != null)
+        {
+            lmsCanvasInstance.SetActive(false);
+        }
+        else
+        {
+            Debug.LogError("lmsCanvasInstance is null when trying to close the model selector.");
+        }
     }
 
     private void UpdatePage()

@@ -59,7 +59,8 @@ public class InputHandler : MonoBehaviour
     {
         if (context.performed && ModelSelectorUI != null)
         {
-            var currentModel = LocalPlayerController.GetComponent<BodyReplacementBase>().suitName;
+            var suitId = LocalPlayerController.currentSuitID;
+            string currentModel = ModelManager.GetSuitName(suitId);
             if (ModelManager.RegisteredModels.ContainsKey(currentModel))
             {
                 if (ModelSelectorUI.lmsCanvasInstance.activeSelf)
@@ -83,6 +84,7 @@ public class InputHandler : MonoBehaviour
             Debug.LogError("ModelSelectorUI is not initialized.");
         }
     }
+
 
     public static void ToggleModel()
     {
