@@ -24,11 +24,27 @@ public class InputHandler : MonoBehaviour
         {
             LocalPlayerController = __instance;
         }
+
+        // Initialize input actions
+        InputActions.Instance.Enable();
         InputActions.Instance.ToggleModelKey.performed += OnToggleModelKeyPressed;
         InputActions.Instance.OpenModelSelectorKey.performed += OnOpenModelSelectorKeyPressed;
 
-        // Assuming ModelSelectorUI is a prefab you instantiated and assigned
-        ModelSelectorUI = FindObjectOfType<ModelSelectorUI>();
+        // Ensure ModelSelectorUI is instantiated and assigned
+        if (ModelSelectorUI == null)
+        {
+            var modelSelectorPrefab = AssetLoader.LoadUIPrefab("LMSCanvas");
+            if (modelSelectorPrefab != null)
+            {
+                var modelSelectorInstance = Instantiate(modelSelectorPrefab);
+                ModelSelectorUI = modelSelectorInstance.AddComponent<ModelSelectorUI>();
+                modelSelectorInstance.SetActive(false); // Hide the UI initially
+            }
+            else
+            {
+                Debug.LogError("Failed to load LMSCanvas prefab for ModelSelectorUI.");
+            }
+        }
     }
 
     private static void OnToggleModelKeyPressed(InputAction.CallbackContext context)
@@ -41,13 +57,30 @@ public class InputHandler : MonoBehaviour
 
     private static void OnOpenModelSelectorKeyPressed(InputAction.CallbackContext context)
     {
-        if (context.performed)
+        if (context.performed && ModelSelectorUI != null)
         {
             var currentModel = LocalPlayerController.GetComponent<BodyReplacementBase>().suitName;
             if (ModelManager.RegisteredModels.ContainsKey(currentModel))
             {
-                ModelSelectorUI.Open(ModelManager.RegisteredModels[currentModel]);
+                if (ModelSelectorUI.lmsCanvasInstance.activeSelf)
+                {
+                    ModelSelectorUI.Close();
+                    EnableCycling = true;
+                }
+                else
+                {
+                    ModelSelectorUI.Open(ModelManager.RegisteredModels[currentModel]);
+                    EnableCycling = false;
+                }
             }
+            else
+            {
+                Debug.LogError($"No registered models found for suit: {currentModel}");
+            }
+        }
+        else
+        {
+            Debug.LogError("ModelSelectorUI is not initialized.");
         }
     }
 

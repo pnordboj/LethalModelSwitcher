@@ -10,6 +10,6 @@ public class InputActions : LcInputActions
     [InputAction("<Keyboard>/u", Name = "Toggle Model")]
     public InputAction ToggleModelKey { get; set; }
 
-    [InputAction("<Keyboard>/-", Name = "Open Model Selector")]
+    [InputAction("<Keyboard>/k", Name = "Open Model Selector")]
     public InputAction OpenModelSelectorKey { get; set; }
 }

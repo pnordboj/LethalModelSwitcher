@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 using ModelReplacement;
+using UnityEngine;
 
 namespace LethalModelSwitcher.Utils;
 
@@ -28,7 +28,6 @@ public static class ModelManager
         if (RegisteredModels.ContainsKey(baseSuitName))
         {
             RegisteredModels[baseSuitName].Add(new ModelVariant(baseSuitName, variantName, variantType, sound, modelPrefab, false));
-            ModelReplacementAPI.RegisterModelReplacementException(variantType);
             LethalModelSwitcher.Logger.LogInfo($"Registered variant: {variantName} for base suit: {baseSuitName}");
         }
         else

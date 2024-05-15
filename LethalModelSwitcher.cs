@@ -1,10 +1,11 @@
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
+using LethalModelSwitcher.Utils;
 
 namespace LethalModelSwitcher;
 
-[BepInPlugin("nordbo.LethaModelSwitcher", "Lethal Model Switcher", "0.1.0")]
+[BepInPlugin("nordbo.LethalModelSwitcher", "Lethal Model Switcher", "0.1.0")]
 [BepInDependency("meow.ModelReplacementAPI", BepInDependency.DependencyFlags.HardDependency)] // Handling Model Replacements for Suits
 [BepInDependency("com.rune580.LethalCompanyInputUtils", BepInDependency.DependencyFlags.HardDependency)] // Handling Key Bindings
 [BepInDependency("LethalNetworkAPI")] // Handling Networking
@@ -18,6 +19,8 @@ public class LethalModelSwitcher : BaseUnityPlugin
     {
         Instance = this;
         Logger = base.Logger;
+        
+        AssetLoader.LoadUIAssetBundle("lethalmodelswitchingbundle");
 
         harmony.PatchAll();
 
