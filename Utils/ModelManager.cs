@@ -9,45 +9,47 @@ public static class ModelManager
 {
     public static Dictionary<string, List<ModelVariant>> RegisteredModels = new Dictionary<string, List<ModelVariant>>();
 
-    public static void RegisterBaseModel(string modelName, Type modelType, AudioClip sound = null, GameObject modelPrefab = null)
+    public static void RegisterBaseModel(string suitName, string modelName, Type modelType, AudioClip sound = null, GameObject modelPrefab = null)
     {
-        if (!RegisteredModels.ContainsKey(modelName))
+        if (!RegisteredModels.ContainsKey(suitName))
         {
-            RegisteredModels[modelName] = new List<ModelVariant> { new ModelVariant(modelName, modelType, sound, modelPrefab, true) };
-            ModelReplacementAPI.RegisterSuitModelReplacement(modelName, modelType);
-            LethalModelSwitcher.Logger.LogInfo($"Registered base model: {modelName}");
+            RegisteredModels[suitName] = new List<ModelVariant> { new ModelVariant(suitName, modelName, modelType, sound, modelPrefab, true) };
+            ModelReplacementAPI.RegisterSuitModelReplacement(suitName, modelType);
+            LethalModelSwitcher.Logger.LogInfo($"Registered base model: {modelName} for suit: {suitName}");
         }
         else
         {
-            LethalModelSwitcher.Logger.LogWarning($"Model {modelName} is already registered.");
+            LethalModelSwitcher.Logger.LogWarning($"Suit {suitName} already has a registered model.");
         }
     }
 
-    public static void RegisterModelVariant(string baseModelName, string variantName, Type variantType, AudioClip sound = null, GameObject modelPrefab = null)
+    public static void RegisterModelVariant(string baseSuitName, string variantName, Type variantType, AudioClip sound = null, GameObject modelPrefab = null)
     {
-        if (RegisteredModels.ContainsKey(baseModelName))
+        if (RegisteredModels.ContainsKey(baseSuitName))
         {
-            RegisteredModels[baseModelName].Add(new ModelVariant(variantName, variantType, sound, modelPrefab, false));
+            RegisteredModels[baseSuitName].Add(new ModelVariant(baseSuitName, variantName, variantType, sound, modelPrefab, false));
             ModelReplacementAPI.RegisterModelReplacementException(variantType);
-            LethalModelSwitcher.Logger.LogInfo($"Registered variant: {variantName} for base model: {baseModelName}");
+            LethalModelSwitcher.Logger.LogInfo($"Registered variant: {variantName} for base suit: {baseSuitName}");
         }
         else
         {
-            LethalModelSwitcher.Logger.LogError($"Base model {baseModelName} not found. Register the base model first.");
+            LethalModelSwitcher.Logger.LogError($"Base suit {baseSuitName} not found. Register the base model first.");
         }
     }
 }
 
 public class ModelVariant
 {
+    public string SuitName { get; }
     public string Name { get; }
     public Type Type { get; }
     public AudioClip Sound { get; }
     public GameObject ModelPrefab { get; }
     public bool IsActive { get; private set; }
 
-    public ModelVariant(string name, Type type, AudioClip sound, GameObject modelPrefab, bool isActive)
+    public ModelVariant(string suitName, string name, Type type, AudioClip sound, GameObject modelPrefab, bool isActive)
     {
+        SuitName = suitName;
         Name = name;
         Type = type;
         Sound = sound;
