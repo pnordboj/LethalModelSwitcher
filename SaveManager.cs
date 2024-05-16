@@ -1,0 +1,22 @@
+﻿using System;
+using System.Collections.Generic;
+using BepInEx.Configuration;
+
+namespace LethalModelSwitcher
+{
+    public static class SaveManager
+    {
+        private static ConfigFile configFile = new ConfigFile("LethalModelSwitcher.cfg", true);
+
+        public static void SaveModelState(string suitName, string modelName)
+        {
+            configFile.Bind("ModelState", suitName, modelName);
+            configFile.Save();
+        }
+
+        public static string LoadModelState(string suitName)
+        {
+            return configFile.Bind("ModelState", suitName, "").Value;
+        }
+    }
+}

@@ -18,11 +18,11 @@ public static class AssetLoader
 
         if (uiAssetBundle == null)
         {
-            Debug.LogError("Failed to load UI AssetBundle!");
+            LethalModelSwitcher.Logger.LogError("Failed to load UI AssetBundle!");
         }
         else
         {
-            Debug.Log("UI AssetBundle loaded successfully.");
+            LethalModelSwitcher.Logger.LogInfo("UI AssetBundle loaded successfully.");
         }
     }
 
@@ -30,7 +30,7 @@ public static class AssetLoader
     {
         if (uiAssetBundle == null)
         {
-            Debug.LogError("UI AssetBundle not loaded!");
+            LethalModelSwitcher.Logger.LogError("UI AssetBundle not loaded!");
             return null;
         }
 
