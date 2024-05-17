@@ -5,7 +5,9 @@ namespace LethalModelSwitcher.Input
 {
     internal class IngameKeybinds : LcInputActions
     {
-        internal static IngameKeybinds Instance = new IngameKeybinds();
+        private static IngameKeybinds InputActions;
+        
+        public static IngameKeybinds Instance => InputActions ?? (InputActions = new IngameKeybinds());
 
         [InputAction("<Keyboard>/u", Name = "Toggle Model")]
         public InputAction ToggleModelKey { get; set; }

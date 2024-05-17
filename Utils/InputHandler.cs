@@ -3,7 +3,6 @@ using GameNetcodeStuff;
 using UnityEngine;
 using HarmonyLib;
 using LethalModelSwitcher.Helper;
-using LethalModelSwitcher.Input;
 using LethalModelSwitcher.UI;
 using LethalModelSwitcher.Utils;
 using LethalNetworkAPI;
@@ -31,8 +30,6 @@ namespace LethalModelSwitcher.Utils
         {
             CustomLogging.Log("Initializing local player.");
 
-            InitializeInputActions();
-
             if (ModelSelectorUI == null)
             {
                 var modelSelectorPrefab = HelperTools.LoadUIPrefab("LMSCanvas");
@@ -44,35 +41,6 @@ namespace LethalModelSwitcher.Utils
                     modelSelectorInstance.SetActive(false);
                 }
             }
-        }
-
-        private void OnEnable()
-        {
-            EnableInputActions();
-        }
-
-        private void OnDisable()
-        {
-            DisableInputActions();
-        }
-
-        private static void InitializeInputActions()
-        {
-            IngameKeybinds.Instance.Enable();
-            Keybinds.Instance.ToggleModelAction.performed += OnToggleModelKeyPressed;
-            Keybinds.Instance.OpenModelSelectorAction.performed += OnOpenModelSelectorKeyPressed;
-        }
-
-        private static void EnableInputActions()
-        {
-            IngameKeybinds.Instance.Enable();
-        }
-
-        private static void DisableInputActions()
-        {
-            IngameKeybinds.Instance.Disable();
-            Keybinds.Instance.ToggleModelAction.performed -= OnToggleModelKeyPressed;
-            Keybinds.Instance.OpenModelSelectorAction.performed -= OnOpenModelSelectorKeyPressed;
         }
 
         private static void OnToggleModelKeyPressed(InputAction.CallbackContext context)

@@ -1,47 +1,44 @@
-﻿using BepInEx;
-using HarmonyLib;
-using LethalModelSwitcher.Utils;
+﻿using LethalModelSwitcher.Utils;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace LethalModelSwitcher.Input
 {
-    [HarmonyPatch]
-    internal class Keybinds
+    internal static class Keybinds
     {
-        internal static Keybinds Instance;
-        
-        public InputAction ToggleModelAction { get; private set; }
-        public InputAction OpenModelSelectorAction { get; private set; }
+        public static InputAction ToggleModelAction { get; private set; }
+        public static InputAction OpenModelSelectorAction { get; private set; }
 
-        private void Awake()
+        private static InputActionMap _keybinds;
+        private static InputActionAsset _inputActionAsset;
+
+        static Keybinds()
         {
-            Instance = this;
             InitializeKeybinds();
         }
 
-        private void InitializeKeybinds()
+        public static void InitializeKeybinds()
         {
-            var keybinds = new InputActionMap("LethalModelSwitcher");
-            
-            
+            _inputActionAsset = ScriptableObject.CreateInstance<InputActionAsset>();
+            _keybinds = _inputActionAsset.AddActionMap("Keybinds");
 
-            ToggleModelAction = keybinds.AddAction("ToggleModel", binding: "<Keyboard>/u");
-            OpenModelSelectorAction = keybinds.AddAction("OpenModelSelector", binding: "<Keyboard>/k");
+            ToggleModelAction = _keybinds.AddAction("ToggleModel", binding: "<Keyboard>/u");
+            OpenModelSelectorAction = _keybinds.AddAction("OpenModelSelector", binding: "<Keyboard>/k");
 
-            ToggleModelAction.performed += OnToggleModelPerformed;
-            OpenModelSelectorAction.performed += OnOpenModelSelectorPerformed;
+            ToggleModelAction.performed += context => InputHandler.ToggleModel();
+            OpenModelSelectorAction.performed += context => InputHandler.OpenModelSelector();
 
-            keybinds.Enable();
+            _inputActionAsset.Enable();
         }
 
-        private void OnToggleModelPerformed(InputAction.CallbackContext context)
+        public static void Enable()
         {
-            InputHandler.ToggleModel();
+            _keybinds.Enable();
         }
 
-        private void OnOpenModelSelectorPerformed(InputAction.CallbackContext context)
+        public static void Disable()
         {
-            InputHandler.OpenModelSelector();
+            _keybinds.Disable();
         }
     }
 }

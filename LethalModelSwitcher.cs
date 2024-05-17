@@ -1,6 +1,7 @@
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
+using LethalModelSwitcher.Input;
 using LethalModelSwitcher.Utils;
 
 namespace LethalModelSwitcher;
@@ -19,6 +20,8 @@ public class LethalModelSwitcher : BaseUnityPlugin
     {
         Instance = this;
         Logger = base.Logger;
+        
+        Keybinds.InitializeKeybinds();
         
         AssetLoader.LoadUIAssetBundle("lethalmodelswitchingbundle");
 
