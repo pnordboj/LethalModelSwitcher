@@ -3,6 +3,7 @@ using GameNetcodeStuff;
 using UnityEngine;
 using HarmonyLib;
 using LethalModelSwitcher.Helper;
+using LethalModelSwitcher.Input;
 using LethalModelSwitcher.UI;
 using LethalModelSwitcher.Utils;
 using LethalNetworkAPI;
@@ -15,12 +16,12 @@ namespace LethalModelSwitcher.Utils
     public class InputHandler : MonoBehaviour
     {
         public static bool EnableCycling = true;
-        public static ModelSelectorUI ModelSelectorUI;
 
         [HarmonyPatch("Start")]
         [HarmonyPostfix]
         private static void InitializeModelSwitcher(PlayerControllerB __instance)
         {
+            CustomLogging.Log("Adding InputHandler component to the player.");
             __instance.gameObject.AddComponent<InputHandler>();
         }
 
@@ -30,32 +31,19 @@ namespace LethalModelSwitcher.Utils
         {
             CustomLogging.Log("Initializing local player.");
 
-            if (ModelSelectorUI == null)
+            // Ensure ModelSelectorUI is initialized
+            if (ModelSelectorUI.Instance == null)
             {
-                var modelSelectorPrefab = HelperTools.LoadUIPrefab("LMSCanvas");
-                if (modelSelectorPrefab != null)
+                CustomLogging.LogError("ModelSelectorUI is not initialized.");
+                
+                if (ModelSelectorUI.Instance == null)
                 {
-                    var modelSelectorInstance = Instantiate(modelSelectorPrefab);
-                    ModelSelectorUI = modelSelectorInstance.AddComponent<ModelSelectorUI>();
-                    ModelSelectorUI.AssignUIElements(modelSelectorInstance);
-                    modelSelectorInstance.SetActive(false);
+                    CustomLogging.LogError("Failed to initialize ModelSelectorUI.");
                 }
-            }
-        }
-
-        private static void OnToggleModelKeyPressed(InputAction.CallbackContext context)
-        {
-            if (context.performed && EnableCycling)
-            {
-                ToggleModel();
-            }
-        }
-
-        private static void OnOpenModelSelectorKeyPressed(InputAction.CallbackContext context)
-        {
-            if (context.performed)
-            {
-                OpenModelSelector();
+                else
+                {
+                    CustomLogging.Log("ModelSelectorUI initialized successfully.");
+                }
             }
         }
 
@@ -63,9 +51,9 @@ namespace LethalModelSwitcher.Utils
         {
             CustomLogging.Log("Opening model selector");
 
-            if (ModelSelectorUI == null)
+            if (ModelSelectorUI.Instance == null)
             {
-                CustomLogging.LogError("ModelSelectorUI is not initialized.");
+                CustomLogging.LogError("ModelSelectorUI.Instance is not initialized.");
                 return;
             }
 
@@ -76,28 +64,47 @@ namespace LethalModelSwitcher.Utils
                 return;
             }
 
-            var suitId = localPlayer.currentSuitID;
-            string currentModel = ModelManager.GetSuitName(suitId);
-
-            if (!ModelManager.RegisteredModels.ContainsKey(currentModel))
+            var bodyReplacementBase = localPlayer.GetComponent<BodyReplacementBase>();
+            if (bodyReplacementBase == null)
             {
-                CustomLogging.LogError($"No registered models found for suit: {currentModel}");
+                CustomLogging.LogError("BodyReplacementBase component is not found on the local player.");
                 return;
             }
 
-            if (ModelSelectorUI.lmsCanvasInstance.activeSelf)
+            var suitName = bodyReplacementBase.suitName;
+            if (string.IsNullOrEmpty(suitName))
             {
-                ModelSelectorUI.Close();
-                EnableCycling = true;
+                CustomLogging.LogError("Suit name is null or empty.");
+                return;
+            }
+
+            if (!ModelManager.RegisteredModels.ContainsKey(suitName))
+            {
+                CustomLogging.LogError($"No registered models found for suit: {suitName}");
+                return;
+            }
+
+            // Directly control activation of the lmsCanvasInstance
+            if (ModelSelectorUI.lmsCanvasInstance != null)
+            {
+                if (ModelSelectorUI.lmsCanvasInstance.activeSelf)
+                {
+                    ModelSelectorUI.Close();
+                    EnableCycling = true;
+                }
+                else
+                {
+                    ModelSelectorUI.Instance.Open(ModelManager.GetVariants(suitName)); // Get only variants
+                    EnableCycling = false;
+                }
             }
             else
             {
-                ModelSelectorUI.Open(ModelManager.RegisteredModels[currentModel]);
-                EnableCycling = false;
+                CustomLogging.LogError("ModelSelectorUI.lmsCanvasInstance is null.");
             }
         }
 
-        private static PlayerControllerB FindLocalPlayerController()
+        public static PlayerControllerB FindLocalPlayerController()
         {
             foreach (var player in FindObjectsOfType<PlayerControllerB>())
             {
@@ -106,6 +113,7 @@ namespace LethalModelSwitcher.Utils
                     return player;
                 }
             }
+            CustomLogging.LogError("LocalPlayerController not found.");
             return null;
         }
 
@@ -120,10 +128,17 @@ namespace LethalModelSwitcher.Utils
                 return;
             }
 
-            var currentModel = localPlayer.GetComponent<BodyReplacementBase>().suitName;
-            if (!ModelManager.RegisteredModels.ContainsKey(currentModel)) return;
+            var bodyReplacementBase = localPlayer.GetComponent<BodyReplacementBase>();
+            if (bodyReplacementBase == null)
+            {
+                CustomLogging.LogError("BodyReplacementBase component is not found on the local player.");
+                return;
+            }
 
-            var models = ModelManager.RegisteredModels[currentModel];
+            var suitName = bodyReplacementBase.suitName;
+            if (!ModelManager.RegisteredModels.ContainsKey(suitName)) return;
+
+            var models = ModelManager.RegisteredModels[suitName];
             var currentIndex = models.FindIndex(m => m.IsActive);
             var nextIndex = (currentIndex + 1) % models.Count;
 
@@ -139,8 +154,15 @@ namespace LethalModelSwitcher.Utils
                 return;
             }
 
-            var currentModel = localPlayer.GetComponent<BodyReplacementBase>().suitName;
-            var models = ModelManager.RegisteredModels[currentModel];
+            var bodyReplacementBase = localPlayer.GetComponent<BodyReplacementBase>();
+            if (bodyReplacementBase == null)
+            {
+                CustomLogging.LogError("BodyReplacementBase component is not found on the local player.");
+                return;
+            }
+
+            var suitName = bodyReplacementBase.suitName;
+            var models = ModelManager.GetVariants(suitName); // Get only variants
 
             var nextModel = models[index];
             ModelReplacementAPI.SetPlayerModelReplacement(localPlayer, nextModel.Type);

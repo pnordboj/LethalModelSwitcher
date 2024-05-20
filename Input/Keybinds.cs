@@ -19,6 +19,10 @@ namespace LethalModelSwitcher.Input
 
         public static void InitializeKeybinds()
         {
+            if (_inputActionAsset != null) return;
+
+            CustomLogging.Log("Initializing keybinds...");
+
             _inputActionAsset = ScriptableObject.CreateInstance<InputActionAsset>();
             _keybinds = _inputActionAsset.AddActionMap("Keybinds");
 
@@ -29,16 +33,6 @@ namespace LethalModelSwitcher.Input
             OpenModelSelectorAction.performed += context => InputHandler.OpenModelSelector();
 
             _inputActionAsset.Enable();
-        }
-
-        public static void Enable()
-        {
-            _keybinds.Enable();
-        }
-
-        public static void Disable()
-        {
-            _keybinds.Disable();
         }
     }
 }

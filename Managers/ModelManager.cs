@@ -42,7 +42,7 @@ namespace LethalModelSwitcher.Utils
             {
                 foreach (var variant in suitEntry.Value)
                 {
-                    if (variant.IsActive && variant.Type.GetHashCode() == suitId) // Check if the model is active and matches the suitId
+                    if (variant.IsActive && variant.Type.GetHashCode() == suitId)
                     {
                         return suitEntry.Key;
                     }
@@ -50,6 +50,32 @@ namespace LethalModelSwitcher.Utils
             }
             LethalModelSwitcher.Logger.LogWarning($"No active suit found for suitId: {suitId}");
             return null;
+        }
+
+        public static List<ModelVariant> GetVariants(string suitName)
+        {
+            return RegisteredModels[suitName];
+        }
+        
+        public static ModelVariant GetModelVariant(string suitName, string modelName)
+        {
+            return RegisteredModels[suitName].Find(variant => variant.Name == modelName);
+        }
+
+        public static void SetModelActive(string suitName, string modelName)
+        {
+            if (RegisteredModels.ContainsKey(suitName))
+            {
+                foreach (var variant in RegisteredModels[suitName])
+                {
+                    variant.SetActive(variant.Name == modelName);
+                }
+                LethalModelSwitcher.Logger.LogInfo($"Set model {modelName} as active for suit {suitName}");
+            }
+            else
+            {
+                LethalModelSwitcher.Logger.LogError($"Suit {suitName} not found. Cannot set model {modelName} as active.");
+            }
         }
     }
 
