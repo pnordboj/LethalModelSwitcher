@@ -54,9 +54,14 @@ namespace LethalModelSwitcher.Utils
 
         public static List<ModelVariant> GetVariants(string suitName)
         {
-            return RegisteredModels[suitName];
+            if (RegisteredModels.ContainsKey(suitName))
+            {
+                return RegisteredModels[suitName];
+            }
+            LethalModelSwitcher.Logger.LogError($"Suit {suitName} not found. Cannot get variants.");
+            return null;
         }
-        
+
         public static ModelVariant GetModelVariant(string suitName, string modelName)
         {
             return RegisteredModels[suitName].Find(variant => variant.Name == modelName);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using GameNetcodeStuff;
 using UnityEngine;
 using HarmonyLib;
@@ -34,8 +35,8 @@ namespace LethalModelSwitcher.Utils
             // Ensure ModelSelectorUI is initialized
             if (ModelSelectorUI.Instance == null)
             {
-                CustomLogging.LogError("ModelSelectorUI is not initialized.");
-                
+                CustomLogging.Log("ModelSelectorUI is not initialized, attempting to initialize.");
+
                 if (ModelSelectorUI.Instance == null)
                 {
                     CustomLogging.LogError("Failed to initialize ModelSelectorUI.");
@@ -94,7 +95,13 @@ namespace LethalModelSwitcher.Utils
                 }
                 else
                 {
-                    ModelSelectorUI.Instance.Open(ModelManager.GetVariants(suitName)); // Get only variants
+                    var variants = ModelManager.GetVariants(suitName);
+                    if (variants == null || variants.Count == 0)
+                    {
+                        CustomLogging.LogError($"No variants found for suit: {suitName}");
+                        return;
+                    }
+                    ModelSelectorUI.Instance.Open(variants); // Get variants
                     EnableCycling = false;
                 }
             }
@@ -162,7 +169,19 @@ namespace LethalModelSwitcher.Utils
             }
 
             var suitName = bodyReplacementBase.suitName;
-            var models = ModelManager.GetVariants(suitName); // Get only variants
+            var models = ModelManager.GetVariants(suitName); // Get variants
+
+            if (models == null || models.Count == 0)
+            {
+                CustomLogging.LogError($"No variants found for suit: {suitName}");
+                return;
+            }
+
+            if (index < 0 || index >= models.Count)
+            {
+                CustomLogging.LogError($"Model index {index} is out of range for suit: {suitName}");
+                return;
+            }
 
             var nextModel = models[index];
             ModelReplacementAPI.SetPlayerModelReplacement(localPlayer, nextModel.Type);
