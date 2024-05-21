@@ -284,7 +284,7 @@ namespace LethalModelSwitcher.UI
         {
             if (selectedModelIndex >= 0)
             {
-                InputHandler.SelectModel(selectedModelIndex, models[selectedModelIndex].BaseSuitName);
+                InputHandler.SelectModel(selectedModelIndex, models[selectedModelIndex].SuitName);
                 Close();
             }
             else

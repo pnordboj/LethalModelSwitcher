@@ -133,12 +133,22 @@ namespace LethalModelSwitcher.Utils
             }
 
             var suitName = bodyReplacementBase.suitName;
-            if (!ModelManager.BaseModels.ContainsKey(suitName)) return;
+            if (string.IsNullOrEmpty(suitName))
+            {
+                CustomLogging.LogError("Suit name is null or empty in ToggleModel.");
+                return;
+            }
+
+            if (!ModelManager.BaseModels.ContainsKey(suitName))
+            {
+                CustomLogging.LogError($"Suit name {suitName} not found in BaseModels.");
+                return;
+            }
 
             var baseModel = ModelManager.GetBaseModel(suitName);
             var variants = ModelManager.GetVariants(suitName);
 
-            if (variants.Count == 1)
+            if (variants != null && variants.Count == 1)
             {
                 // Toggle between base model and single variant
                 bool isBaseModelActive = baseModel.IsActive;
@@ -186,11 +196,11 @@ namespace LethalModelSwitcher.Utils
                 // Activate base model
                 ModelReplacementAPI.SetPlayerModelReplacement(localPlayer, baseModel.Type);
                 baseModel.SetActive(true);
-                models.ForEach(m => m.SetActive(false));
+                models?.ForEach(m => m.SetActive(false));
             }
             else
             {
-                if (index < 0 || index > models.Count)
+                if (index < 0 || index > (models?.Count ?? 0))
                 {
                     CustomLogging.LogError($"Model index {index} is out of range for suit: {suitName}");
                     return;
@@ -199,7 +209,7 @@ namespace LethalModelSwitcher.Utils
                 var nextModel = models[index - 1]; // Adjust index for variants list
                 ModelReplacementAPI.SetPlayerModelReplacement(localPlayer, nextModel.Type);
                 nextModel.SetActive(true);
-                models.ForEach(m => m.SetActive(false));
+                models?.ForEach(m => m.SetActive(false));
                 baseModel.SetActive(false);
 
                 if (nextModel.Sound != null)
@@ -207,7 +217,7 @@ namespace LethalModelSwitcher.Utils
                     Managers.SoundManager.PlaySound(nextModel.Sound, localPlayer.transform.position);
                 }
 
-                SyncManager.SendModelChange(localPlayer.GetClientId(), suitName, nextModel.Name);
+                SyncManager.SendModelChange(localPlayer.GetClientId(), nextModel.SuitName, nextModel.Name);
             }
         }
     }

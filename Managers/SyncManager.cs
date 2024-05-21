@@ -2,6 +2,7 @@
 using LethalModelSwitcher.Utils;
 using LethalNetworkAPI;
 using ModelReplacement;
+using UnityEngine;
 
 namespace LethalModelSwitcher.Managers
 {
@@ -16,16 +17,41 @@ namespace LethalModelSwitcher.Managers
 
         private static void OnToggleModelReceived(ModelChangeMessage message, ulong clientId)
         {
+            if (string.IsNullOrEmpty(message.SuitName))
+            {
+                LethalModelSwitcher.Logger.LogError("OnToggleModelReceived: SuitName is null or empty.");
+                return;
+            }
+
             var player = clientId.GetPlayerController();
             if (player != null)
             {
-                var models = ModelManager.GetVariants(message.SuitName);
-                var model = models.First(m => m.Name == message.ModelName);
-                ModelReplacementAPI.SetPlayerModelReplacement(player, model.Type);
+                ModelBase model = null;
+                var variants = ModelManager.GetVariants(message.SuitName);
 
-                if (model.Sound != null)
+                if (variants != null)
                 {
-                    SoundManager.PlaySound(model.Sound, player.transform.position);
+                    model = variants.FirstOrDefault(m => m.Name == message.ModelName);
+                }
+
+                if (model == null)
+                {
+                    // Try getting the base model if no variant found
+                    model = ModelManager.GetBaseModel(message.SuitName);
+                }
+
+                if (model != null)
+                {
+                    ModelReplacementAPI.SetPlayerModelReplacement(player, model.Type);
+
+                    if (model.Sound != null)
+                    {
+                        SoundManager.PlaySound(model.Sound, player.transform.position);
+                    }
+                }
+                else
+                {
+                    LethalModelSwitcher.Logger.LogError($"Model not found for suit: {message.SuitName} and model: {message.ModelName} in OnToggleModelReceived");
                 }
             }
             else
