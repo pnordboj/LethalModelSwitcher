@@ -1,15 +1,11 @@
-﻿using System;
-using System.Linq;
-using GameNetcodeStuff;
+﻿using GameNetcodeStuff;
 using UnityEngine;
 using HarmonyLib;
-using LethalModelSwitcher.Helper;
-using LethalModelSwitcher.Input;
+using LethalModelSwitcher.Managers;
 using LethalModelSwitcher.UI;
-using LethalModelSwitcher.Utils;
 using LethalNetworkAPI;
 using ModelReplacement;
-using UnityEngine.InputSystem;
+using System.Collections.Generic;
 
 namespace LethalModelSwitcher.Utils
 {
@@ -17,6 +13,7 @@ namespace LethalModelSwitcher.Utils
     public class InputHandler : MonoBehaviour
     {
         public static bool EnableCycling = true;
+        private static Dictionary<string, int> lastSelectedVariants = new Dictionary<string, int>();
 
         [HarmonyPatch("Start")]
         [HarmonyPostfix]
@@ -32,10 +29,9 @@ namespace LethalModelSwitcher.Utils
         {
             CustomLogging.Log("Initializing local player.");
 
-            // Ensure ModelSelectorUI is initialized
             if (ModelSelectorUI.Instance == null)
             {
-                CustomLogging.Log("ModelSelectorUI is not initialized, attempting to initialize.");
+                CustomLogging.LogError("ModelSelectorUI is not initialized, attempting to initialize.");
 
                 if (ModelSelectorUI.Instance == null)
                 {
@@ -79,13 +75,13 @@ namespace LethalModelSwitcher.Utils
                 return;
             }
 
-            if (!ModelManager.RegisteredModels.ContainsKey(suitName))
+            var modelVariants = ModelManager.GetVariants(suitName);
+            if (modelVariants == null || modelVariants.Count == 0)
             {
                 CustomLogging.LogError($"No registered models found for suit: {suitName}");
                 return;
             }
 
-            // Directly control activation of the lmsCanvasInstance
             if (ModelSelectorUI.lmsCanvasInstance != null)
             {
                 if (ModelSelectorUI.lmsCanvasInstance.activeSelf)
@@ -95,13 +91,7 @@ namespace LethalModelSwitcher.Utils
                 }
                 else
                 {
-                    var variants = ModelManager.GetVariants(suitName);
-                    if (variants == null || variants.Count == 0)
-                    {
-                        CustomLogging.LogError($"No variants found for suit: {suitName}");
-                        return;
-                    }
-                    ModelSelectorUI.Instance.Open(variants); // Get variants
+                    ModelSelectorUI.Instance.Open(modelVariants);
                     EnableCycling = false;
                 }
             }
@@ -143,16 +133,36 @@ namespace LethalModelSwitcher.Utils
             }
 
             var suitName = bodyReplacementBase.suitName;
-            if (!ModelManager.RegisteredModels.ContainsKey(suitName)) return;
+            if (!ModelManager.BaseModels.ContainsKey(suitName)) return;
 
-            var models = ModelManager.RegisteredModels[suitName];
-            var currentIndex = models.FindIndex(m => m.IsActive);
-            var nextIndex = (currentIndex + 1) % models.Count;
+            var baseModel = ModelManager.GetBaseModel(suitName);
+            var variants = ModelManager.GetVariants(suitName);
 
-            SelectModel(nextIndex);
+            if (variants.Count == 1)
+            {
+                // Toggle between base model and single variant
+                bool isBaseModelActive = baseModel.IsActive;
+                int nextIndex = isBaseModelActive ? 1 : 0;
+
+                if (isBaseModelActive)
+                {
+                    lastSelectedVariants[suitName] = nextIndex;
+                }
+                else
+                {
+                    nextIndex = 0; // Switch to base model
+                }
+
+                SelectModel(nextIndex, suitName);
+            }
+            else
+            {
+                // More than one variant available, open the UI
+                OpenModelSelector();
+            }
         }
 
-        public static void SelectModel(int index)
+        public static void SelectModel(int index, string suitName)
         {
             var localPlayer = FindLocalPlayerController();
             if (localPlayer == null)
@@ -168,33 +178,37 @@ namespace LethalModelSwitcher.Utils
                 return;
             }
 
-            var suitName = bodyReplacementBase.suitName;
-            var models = ModelManager.GetVariants(suitName); // Get variants
+            var baseModel = ModelManager.GetBaseModel(suitName);
+            var models = ModelManager.GetVariants(suitName);
 
-            if (models == null || models.Count == 0)
+            if (index == 0)
             {
-                CustomLogging.LogError($"No variants found for suit: {suitName}");
-                return;
+                // Activate base model
+                ModelReplacementAPI.SetPlayerModelReplacement(localPlayer, baseModel.Type);
+                baseModel.SetActive(true);
+                models.ForEach(m => m.SetActive(false));
             }
-
-            if (index < 0 || index >= models.Count)
+            else
             {
-                CustomLogging.LogError($"Model index {index} is out of range for suit: {suitName}");
-                return;
+                if (index < 0 || index > models.Count)
+                {
+                    CustomLogging.LogError($"Model index {index} is out of range for suit: {suitName}");
+                    return;
+                }
+
+                var nextModel = models[index - 1]; // Adjust index for variants list
+                ModelReplacementAPI.SetPlayerModelReplacement(localPlayer, nextModel.Type);
+                nextModel.SetActive(true);
+                models.ForEach(m => m.SetActive(false));
+                baseModel.SetActive(false);
+
+                if (nextModel.Sound != null)
+                {
+                    Managers.SoundManager.PlaySound(nextModel.Sound, localPlayer.transform.position);
+                }
+
+                SyncManager.SendModelChange(localPlayer.GetClientId(), suitName, nextModel.Name);
             }
-
-            var nextModel = models[index];
-            ModelReplacementAPI.SetPlayerModelReplacement(localPlayer, nextModel.Type);
-            nextModel.SetActive(true);
-            models.ForEach(m => m.SetActive(false));
-            nextModel.SetActive(true);
-
-            if (nextModel.Sound != null)
-            {
-                SoundManager.PlaySound(nextModel.Sound, localPlayer.transform.position);
-            }
-
-            SyncManager.SendModelChange(localPlayer.GetClientId(), nextModel.Name);
         }
     }
 }

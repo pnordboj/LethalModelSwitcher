@@ -7,13 +7,19 @@ namespace LethalModelSwitcher.Utils
 {
     public static class ModelManager
     {
-        public static Dictionary<string, List<ModelVariant>> RegisteredModels = new Dictionary<string, List<ModelVariant>>();
+        // Dictionary to store base models
+        public static Dictionary<string, BaseModel> BaseModels = new Dictionary<string, BaseModel>();
+
+        // Dictionary to store variants keyed by the base model name
+        public static Dictionary<string, List<ModelVariant>> VariantModels = new Dictionary<string, List<ModelVariant>>();
 
         public static void RegisterBaseModel(string suitName, string modelName, Type modelType, AudioClip sound = null, GameObject modelPrefab = null)
         {
-            if (!RegisteredModels.ContainsKey(suitName))
+            if (!BaseModels.ContainsKey(suitName))
             {
-                RegisteredModels[suitName] = new List<ModelVariant> { new ModelVariant(suitName, modelName, modelType, sound, modelPrefab, true) };
+                var baseModel = new BaseModel(suitName, modelName, modelType, sound, modelPrefab);
+                BaseModels[suitName] = baseModel;
+                VariantModels[suitName] = new List<ModelVariant>();
                 ModelReplacementAPI.RegisterSuitModelReplacement(suitName, modelType);
                 LethalModelSwitcher.Logger.LogInfo($"Registered base model: {modelName} for suit: {suitName}");
             }
@@ -25,9 +31,10 @@ namespace LethalModelSwitcher.Utils
 
         public static void RegisterModelVariant(string baseSuitName, string variantName, Type variantType, AudioClip sound = null, GameObject modelPrefab = null)
         {
-            if (RegisteredModels.ContainsKey(baseSuitName))
+            if (BaseModels.ContainsKey(baseSuitName))
             {
-                RegisteredModels[baseSuitName].Add(new ModelVariant(baseSuitName, variantName, variantType, sound, modelPrefab, false));
+                var variant = new ModelVariant(baseSuitName, variantName, variantType, sound, modelPrefab);
+                VariantModels[baseSuitName].Add(variant);
                 LethalModelSwitcher.Logger.LogInfo($"Registered variant: {variantName} for base suit: {baseSuitName}");
             }
             else
@@ -38,13 +45,21 @@ namespace LethalModelSwitcher.Utils
 
         public static string GetSuitName(int suitId)
         {
-            foreach (var suitEntry in RegisteredModels)
+            foreach (var baseModel in BaseModels.Values)
             {
-                foreach (var variant in suitEntry.Value)
+                if (baseModel.Type.GetHashCode() == suitId)
                 {
-                    if (variant.IsActive && variant.Type.GetHashCode() == suitId)
+                    return baseModel.SuitName;
+                }
+
+                if (VariantModels.ContainsKey(baseModel.SuitName))
+                {
+                    foreach (var variant in VariantModels[baseModel.SuitName])
                     {
-                        return suitEntry.Key;
+                        if (variant.Type.GetHashCode() == suitId)
+                        {
+                            return baseModel.SuitName;
+                        }
                     }
                 }
             }
@@ -54,28 +69,45 @@ namespace LethalModelSwitcher.Utils
 
         public static List<ModelVariant> GetVariants(string suitName)
         {
-            if (RegisteredModels.ContainsKey(suitName))
+            if (VariantModels.ContainsKey(suitName))
             {
-                return RegisteredModels[suitName];
+                return VariantModels[suitName];
             }
-            LethalModelSwitcher.Logger.LogError($"Suit {suitName} not found. Cannot get variants.");
+            LethalModelSwitcher.Logger.LogError($"Variants for suit {suitName} not found.");
             return null;
         }
 
-        public static ModelVariant GetModelVariant(string suitName, string modelName)
+        public static BaseModel GetBaseModel(string suitName)
         {
-            return RegisteredModels[suitName].Find(variant => variant.Name == modelName);
+            if (BaseModels.ContainsKey(suitName))
+            {
+                return BaseModels[suitName];
+            }
+            LethalModelSwitcher.Logger.LogError($"Base model for suit {suitName} not found.");
+            return null;
         }
 
         public static void SetModelActive(string suitName, string modelName)
         {
-            if (RegisteredModels.ContainsKey(suitName))
+            if (BaseModels.ContainsKey(suitName) && (BaseModels[suitName].Name == modelName))
             {
-                foreach (var variant in RegisteredModels[suitName])
+                BaseModels[suitName].SetActive(true);
+                foreach (var variant in VariantModels[suitName])
+                {
+                    variant.SetActive(false);
+                }
+                LethalModelSwitcher.Logger.LogInfo($"Set base model {modelName} as active for suit {suitName}");
+                return;
+            }
+
+            if (VariantModels.ContainsKey(suitName))
+            {
+                foreach (var variant in VariantModels[suitName])
                 {
                     variant.SetActive(variant.Name == modelName);
                 }
-                LethalModelSwitcher.Logger.LogInfo($"Set model {modelName} as active for suit {suitName}");
+                BaseModels[suitName].SetActive(false);
+                LethalModelSwitcher.Logger.LogInfo($"Set variant model {modelName} as active for suit {suitName}");
             }
             else
             {
@@ -84,7 +116,7 @@ namespace LethalModelSwitcher.Utils
         }
     }
 
-    public class ModelVariant
+    public class BaseModel
     {
         public string SuitName { get; }
         public string Name { get; }
@@ -93,14 +125,39 @@ namespace LethalModelSwitcher.Utils
         public GameObject ModelPrefab { get; }
         public bool IsActive { get; private set; }
 
-        public ModelVariant(string suitName, string name, Type type, AudioClip sound, GameObject modelPrefab, bool isActive)
+        public BaseModel(string suitName, string name, Type type, AudioClip sound, GameObject modelPrefab)
         {
             SuitName = suitName;
             Name = name;
             Type = type;
             Sound = sound;
             ModelPrefab = modelPrefab;
+            IsActive = false;
+        }
+
+        public void SetActive(bool isActive)
+        {
             IsActive = isActive;
+        }
+    }
+
+    public class ModelVariant
+    {
+        public string BaseSuitName { get; }
+        public string Name { get; }
+        public Type Type { get; }
+        public AudioClip Sound { get; }
+        public GameObject ModelPrefab { get; }
+        public bool IsActive { get; private set; }
+
+        public ModelVariant(string baseSuitName, string name, Type type, AudioClip sound, GameObject modelPrefab)
+        {
+            BaseSuitName = baseSuitName;
+            Name = name;
+            Type = type;
+            Sound = sound;
+            ModelPrefab = modelPrefab;
+            IsActive = false;
         }
 
         public void SetActive(bool isActive)

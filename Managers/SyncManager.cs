@@ -1,17 +1,17 @@
 ﻿using System.Linq;
+using LethalModelSwitcher.Utils;
 using LethalNetworkAPI;
 using ModelReplacement;
-using UnityEngine;
 
-namespace LethalModelSwitcher.Utils
+namespace LethalModelSwitcher.Managers
 {
     public class SyncManager
     {
         private static readonly LethalClientMessage<ModelChangeMessage> ToggleModelMessage = new LethalClientMessage<ModelChangeMessage>("LethalModelSwitcher.ToggleModel", null, OnToggleModelReceived);
 
-        public static void SendModelChange(ulong clientId, string modelName)
+        public static void SendModelChange(ulong clientId, string suitName, string modelName)
         {
-            ToggleModelMessage.SendAllClients(new ModelChangeMessage(clientId, modelName), false);
+            ToggleModelMessage.SendAllClients(new ModelChangeMessage(clientId, suitName, modelName), false);
         }
 
         private static void OnToggleModelReceived(ModelChangeMessage message, ulong clientId)
@@ -19,7 +19,7 @@ namespace LethalModelSwitcher.Utils
             var player = clientId.GetPlayerController();
             if (player != null)
             {
-                var models = ModelManager.RegisteredModels[message.ModelName];
+                var models = ModelManager.GetVariants(message.SuitName);
                 var model = models.First(m => m.Name == message.ModelName);
                 ModelReplacementAPI.SetPlayerModelReplacement(player, model.Type);
 
@@ -38,11 +38,13 @@ namespace LethalModelSwitcher.Utils
     public class ModelChangeMessage
     {
         public ulong ClientId { get; }
+        public string SuitName { get; }
         public string ModelName { get; }
 
-        public ModelChangeMessage(ulong clientId, string modelName)
+        public ModelChangeMessage(ulong clientId, string suitName, string modelName)
         {
             ClientId = clientId;
+            SuitName = suitName;
             ModelName = modelName;
         }
     }

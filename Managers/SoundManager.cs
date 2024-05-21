@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace LethalModelSwitcher.Utils;
+namespace LethalModelSwitcher.Managers;
 
 public static class SoundManager
 {

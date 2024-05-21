@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using HarmonyLib;
 using LethalModelSwitcher.Helper;
+using LethalModelSwitcher.Managers;
 using LethalModelSwitcher.Utils;
 using TMPro;
 using UnityEngine;
@@ -75,21 +76,24 @@ namespace LethalModelSwitcher.UI
         {
             CustomLogging.Log("Assigning UI elements for ModelSelectorUI.");
 
-            mainPanel = lmsCanvasInstance.transform.Find("MainPanel")?.gameObject;
-            previewPanel = mainPanel?.transform.Find("PreviewPanel");
-            modelRenderer = previewPanel?.Find("ModelPreview")?.GetComponent<SkinnedMeshRenderer>();
-            SetupPreviewCamera();
+            mainPanel = lmsCanvasInstance.transform.Find("LMSPanel")?.gameObject;
+            RectTransform mainPanelRectTransform = mainPanel.GetComponent<RectTransform>();
+            mainPanelRectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            mainPanelRectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            mainPanelRectTransform.pivot = new Vector2(0.5f, 0.5f);
+            mainPanelRectTransform.sizeDelta = new Vector2(800, 600); // Adjust the size as needed
+            mainPanelRectTransform.anchoredPosition = Vector2.zero;
 
+            previewPanel = mainPanel?.transform.Find("PreviewPanel");
             selectionPanelMain = mainPanel?.transform.Find("SelectionPanelMain");
             selectionLayout = selectionPanelMain?.Find("SelectionLayout");
-            SetupButtonPreviewCamera();
-            optionsPanel = mainPanel?.transform.Find("OptionsPanel");
-            optionsText = optionsPanel?.Find("OptionsText")?.GetComponent<TextMeshProUGUI>();
+            //optionsPanel = mainPanel?.transform.Find("OptionsPanel");
+            //optionsText = optionsPanel?.Find("OptionsText")?.GetComponent<TextMeshProUGUI>();
             paginationPanel = mainPanel?.transform.Find("PaginationPanel");
             prevButton = paginationPanel?.Find("Prev")?.GetComponent<Button>();
             nextButton = paginationPanel?.Find("Next")?.GetComponent<Button>();
-            pageNumberText = paginationPanel?.Find("page")?.GetComponent<TextMeshProUGUI>();
-            confirmButton = previewPanel?.transform.Find("ConfirmButton")?.GetComponent<Button>();
+            pageNumberText = paginationPanel?.Find("PageNumber")?.GetComponent<TextMeshProUGUI>();
+            confirmButton = previewPanel?.Find("ConfirmButton")?.GetComponent<Button>();
 
             if (prevButton != null) prevButton.onClick.AddListener(PreviousPage);
             if (nextButton != null) nextButton.onClick.AddListener(NextPage);
@@ -113,7 +117,6 @@ namespace LethalModelSwitcher.UI
                 // Unlock and show the cursor
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
-
             }
             else
             {
@@ -132,7 +135,6 @@ namespace LethalModelSwitcher.UI
                 // Lock and hide the cursor
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
-
             }
             else
             {
@@ -282,7 +284,7 @@ namespace LethalModelSwitcher.UI
         {
             if (selectedModelIndex >= 0)
             {
-                InputHandler.SelectModel(selectedModelIndex);
+                InputHandler.SelectModel(selectedModelIndex, models[selectedModelIndex].BaseSuitName);
                 Close();
             }
             else

@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using BepInEx.Configuration;
+﻿using BepInEx.Configuration;
 
-namespace LethalModelSwitcher
+namespace LethalModelSwitcher.Managers
 {
     public static class SaveManager
     {
