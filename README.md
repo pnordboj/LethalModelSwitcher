@@ -24,10 +24,6 @@ Add the `LethalModelSwitcher.dll` file as a reference into your project and your
 
 ### Add Dependencies
 
-Make sure you have the following dependencies installed:
-- [Lethal-Company-More-Suits](https://thunderstore.io/c/lethal-company/p/x753/More_Suits/)
-- [ModelReplacementAPI](https://thunderstore.io/c/lethal-company/p/BunyaPineTree/ModelReplacementAPI/)
-
 Add the following dependencies to your mod:
 
 ```csharp
