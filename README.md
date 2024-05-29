@@ -1,3 +1,4 @@
+# Not finished yet still WIP
 # Lethal Model Switcher
 
 Thank you for using the Lethal Model Switcher library! This library simplifies the process of switching models in the game Lethal Company. Below are instructions on how to use this library for your own model mod.
