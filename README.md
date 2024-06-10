@@ -1,3 +1,4 @@
+# Not finished yet still WIP
 # Lethal Model Switcher
 
 Thank you for using the Lethal Model Switcher library! This library simplifies the process of switching models in the game Lethal Company. Below are instructions on how to use this library for your own model mod.
@@ -23,10 +24,6 @@ To use this library in your own model mod, you need to ensure the following:
 Add the `LethalModelSwitcher.dll` file as a reference into your project and your good to go!
 
 ### Add Dependencies
-
-Make sure you have the following dependencies installed:
-- [Lethal-Company-More-Suits](https://thunderstore.io/c/lethal-company/p/x753/More_Suits/)
-- [ModelReplacementAPI](https://thunderstore.io/c/lethal-company/p/BunyaPineTree/ModelReplacementAPI/)
 
 Add the following dependencies to your mod:
 
