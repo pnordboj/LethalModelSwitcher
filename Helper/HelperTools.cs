@@ -10,7 +10,7 @@ namespace LethalModelSwitcher.Helper
             var prefab = AssetLoader.LoadUIPrefab(prefabName);
             if (prefab == null)
             {
-                LethalModelSwitcher.Logger.LogError($"Failed to load prefab: {prefabName}");
+                plugin.Logger.LogError($"Failed to load prefab: {prefabName}");
             }
             return prefab;
         }
@@ -23,7 +23,7 @@ namespace LethalModelSwitcher.Helper
             }
             else
             {
-                LethalModelSwitcher.Logger.LogError("UI Element is null. Cannot toggle state.");
+                plugin.Logger.LogError("UI Element is null. Cannot toggle state.");
             }
         }
     }

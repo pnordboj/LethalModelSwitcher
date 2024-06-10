@@ -8,6 +8,7 @@ public static class AssetLoader
 {
     private static AssetBundle assetBundle;
     private static AssetBundle uiAssetBundle;
+    private static AssetBundle networkBundle;
     
     public static void LoadUIAssetBundle(string bundleName)
     {
@@ -18,11 +19,11 @@ public static class AssetLoader
 
         if (uiAssetBundle == null)
         {
-            LethalModelSwitcher.Logger.LogError("Failed to load UI AssetBundle!");
+            plugin.Logger.LogError("Failed to load UI AssetBundle!");
         }
         else
         {
-            LethalModelSwitcher.Logger.LogInfo("UI AssetBundle loaded successfully.");
+            plugin.Logger.LogInfo("UI AssetBundle loaded successfully.");
         }
     }
 
@@ -30,12 +31,45 @@ public static class AssetLoader
     {
         if (uiAssetBundle == null)
         {
-            LethalModelSwitcher.Logger.LogError("UI AssetBundle not loaded!");
+            plugin.Logger.LogError("UI AssetBundle not loaded!");
             return null;
         }
 
         return uiAssetBundle.LoadAsset<GameObject>(prefabName);
     }
+
+        public static void LoadNetworkBundle(string bundleName)
+        {
+            string assemblyLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string bundlePath = Path.Combine(assemblyLocation, bundleName);
+
+            networkBundle = AssetBundle.LoadFromFile(bundlePath);
+
+            if (networkBundle == null)
+            {
+                plugin.Logger.LogError("Failed to load Network AssetBundle!");
+            }
+            else
+            {
+                plugin.Logger.LogInfo("Network AssetBundle loaded successfully.");
+            }
+        }
+
+        public static GameObject LoadNetworkPrefab(string prefabName)
+        {
+            if (networkBundle == null)
+            {
+                plugin.Logger.LogError("Network AssetBundle not loaded!");
+                return null;
+            }
+
+            var prefab = networkBundle.LoadAsset<GameObject>(prefabName);
+            if (prefab == null)
+            {
+                plugin.Logger.LogError($"Failed to load Network Prefab: {prefabName} from Network AssetBundle!");
+            }
+            return prefab;
+        }
 
     public static void LoadAssetBundle(string bundleName)
     {
@@ -46,11 +80,11 @@ public static class AssetLoader
 
         if (assetBundle == null)
         {
-            LethalModelSwitcher.Logger.LogError("Failed to load AssetBundle!");
+            plugin.Logger.LogError("Failed to load AssetBundle!");
         }
         else
         {
-            LethalModelSwitcher.Logger.LogInfo("AssetBundle loaded successfully.");
+            plugin.Logger.LogInfo("AssetBundle loaded successfully.");
         }
     }
     
@@ -60,11 +94,11 @@ public static class AssetLoader
 
         if (assetBundle == null)
         {
-            LethalModelSwitcher.Logger.LogError("Failed to load AssetBundle!");
+            plugin.Logger.LogError("Failed to load AssetBundle!");
         }
         else
         {
-            LethalModelSwitcher.Logger.LogInfo("AssetBundle loaded successfully.");
+            plugin.Logger.LogInfo("AssetBundle loaded successfully.");
         }
     }
 
@@ -72,7 +106,7 @@ public static class AssetLoader
     {
         if (assetBundle == null)
         {
-            LethalModelSwitcher.Logger.LogError("AssetBundle not loaded!");
+            plugin.Logger.LogError("AssetBundle not loaded!");
             return null;
         }
 
@@ -83,7 +117,7 @@ public static class AssetLoader
     {
         if (assetBundle == null)
         {
-            LethalModelSwitcher.Logger.LogError("AssetBundle not loaded!");
+            plugin.Logger.LogError("AssetBundle not loaded!");
             return null;
         }
 

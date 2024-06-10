@@ -1,63 +1,73 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using LethalModelSwitcher.Utils;
 using LethalNetworkAPI;
 using ModelReplacement;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace LethalModelSwitcher.Managers
 {
     public class SyncManager
     {
-        private static readonly LethalClientMessage<ModelChangeMessage> ToggleModelMessage = new LethalClientMessage<ModelChangeMessage>("LethalModelSwitcher.ToggleModel", null, OnToggleModelReceived);
+        private static readonly LethalServerMessage<ModelChangeMessage> ServerModelChangeMessage = new LethalServerMessage<ModelChangeMessage>("LethalModelSwitcher.ServerModelChange");
+        private static readonly LethalClientMessage<ModelChangeMessage> ClientModelChangeMessage = new LethalClientMessage<ModelChangeMessage>("LethalModelSwitcher.ClientModelChange");
+
+        static SyncManager()
+        {
+            ServerModelChangeMessage.OnReceived += OnServerModelChangeReceived;
+            ClientModelChangeMessage.OnReceived += OnClientModelChangeReceived;
+        }
 
         public static void SendModelChange(ulong clientId, string suitName, string modelName)
         {
-            ToggleModelMessage.SendAllClients(new ModelChangeMessage(clientId, suitName, modelName), false);
-        }
-
-        private static void OnToggleModelReceived(ModelChangeMessage message, ulong clientId)
-        {
-            if (string.IsNullOrEmpty(message.SuitName))
+            if (string.IsNullOrEmpty(suitName) || string.IsNullOrEmpty(modelName))
             {
-                LethalModelSwitcher.Logger.LogError("OnToggleModelReceived: SuitName is null or empty.");
+                plugin.Logger.LogError("SendModelChange: SuitName or ModelName is null or empty.");
                 return;
             }
 
-            var player = clientId.GetPlayerController();
-            if (player != null)
+            ServerModelChangeMessage.SendAllClients(new ModelChangeMessage(clientId, suitName, modelName), true);
+        }
+
+        private static void OnServerModelChangeReceived(ModelChangeMessage message, ulong clientId)
+        {
+            if (IsServer())
             {
-                ModelBase model = null;
-                var variants = ModelManager.GetVariants(message.SuitName);
-
-                if (variants != null)
-                {
-                    model = variants.FirstOrDefault(m => m.Name == message.ModelName);
-                }
-
-                if (model == null)
-                {
-                    // Try getting the base model if no variant found
-                    model = ModelManager.GetBaseModel(message.SuitName);
-                }
-
-                if (model != null)
-                {
-                    ModelReplacementAPI.SetPlayerModelReplacement(player, model.Type);
-
-                    if (model.Sound != null)
-                    {
-                        SoundManager.PlaySound(model.Sound, player.transform.position);
-                    }
-                }
-                else
-                {
-                    LethalModelSwitcher.Logger.LogError($"Model not found for suit: {message.SuitName} and model: {message.ModelName} in OnToggleModelReceived");
-                }
+                ServerModelChangeMessage.SendAllClients(message);
             }
-            else
+        }
+
+        private static void OnClientModelChangeReceived(ModelChangeMessage message)
+        {
+            var player = message.ClientId.GetPlayerController();
+            if (player == null)
             {
-                LethalModelSwitcher.Logger.LogError($"Player not found for client ID: {clientId} in OnToggleModelReceived");
+                plugin.Logger.LogError($"Player not found for client ID: {message.ClientId} in OnClientModelChangeReceived");
+                return;
             }
+
+            ModelBase model = ModelManager.GetVariants(message.SuitName)?.FirstOrDefault(m => m.Name == message.ModelName) as ModelBase
+                              ?? ModelManager.GetBaseModel(message.SuitName);
+
+            if (model == null)
+            {
+                plugin.Logger.LogError($"Model not found for suit: {message.SuitName} and model: {message.ModelName} in OnClientModelChangeReceived");
+                return;
+            }
+
+            ModelReplacementAPI.SetPlayerModelReplacement(player, model.Type);
+
+            if (model.Sound != null)
+            {
+                SoundManager.PlaySound(model.Sound, player.transform.position);
+            }
+        }
+        
+        private static bool IsServer()
+        {
+            // Implement your logic to check if the current instance is the server.
+            return NetworkManager.Singleton.IsServer;
         }
     }
 
@@ -69,6 +79,15 @@ namespace LethalModelSwitcher.Managers
 
         public ModelChangeMessage(ulong clientId, string suitName, string modelName)
         {
+            if (string.IsNullOrEmpty(suitName))
+            {
+                throw new ArgumentNullException(nameof(suitName), "SuitName cannot be null or empty.");
+            }
+            if (string.IsNullOrEmpty(modelName))
+            {
+                throw new ArgumentNullException(nameof(modelName), "ModelName cannot be null or empty.");
+            }
+
             ClientId = clientId;
             SuitName = suitName;
             ModelName = modelName;

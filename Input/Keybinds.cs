@@ -1,16 +1,21 @@
-﻿using LethalModelSwitcher.Utils;
-using UnityEngine;
+﻿using LethalCompanyInputUtils.Api;
+using LethalModelSwitcher.Utils;
 using UnityEngine.InputSystem;
 
 namespace LethalModelSwitcher.Input
 {
+    public class ModelSwitcherInputActions : LcInputActions
+    {
+        [InputAction("<Keyboard>/u", Name = "Toggle Model")]
+        public InputAction ToggleModelAction { get; private set; }
+
+        [InputAction("<Keyboard>/k", Name = "Open Model Selector")]
+        public InputAction OpenModelSelectorAction { get; private set; }
+    }
+
     internal static class Keybinds
     {
-        public static InputAction ToggleModelAction { get; private set; }
-        public static InputAction OpenModelSelectorAction { get; private set; }
-
-        private static InputActionMap _keybinds;
-        private static InputActionAsset _inputActionAsset;
+        public static ModelSwitcherInputActions InputActionsInstance { get; private set; }
 
         static Keybinds()
         {
@@ -19,20 +24,34 @@ namespace LethalModelSwitcher.Input
 
         public static void InitializeKeybinds()
         {
-            if (_inputActionAsset != null) return;
+            if (InputActionsInstance != null) return;
 
             CustomLogging.Log("Initializing keybinds...");
+            InputActionsInstance = new ModelSwitcherInputActions();
 
-            _inputActionAsset = ScriptableObject.CreateInstance<InputActionAsset>();
-            _keybinds = _inputActionAsset.AddActionMap("Keybinds");
+            if (InputActionsInstance.ToggleModelAction == null)
+            {
+                CustomLogging.LogError("ToggleModelAction is null.");
+            }
+            else
+            {
+                CustomLogging.Log("ToggleModelAction initialized.");
+            }
 
-            ToggleModelAction = _keybinds.AddAction("ToggleModel", binding: "<Keyboard>/u");
-            OpenModelSelectorAction = _keybinds.AddAction("OpenModelSelector", binding: "<Keyboard>/k");
+            if (InputActionsInstance.OpenModelSelectorAction == null)
+            {
+                CustomLogging.LogError("OpenModelSelectorAction is null.");
+            }
+            else
+            {
+                CustomLogging.Log("OpenModelSelectorAction initialized.");
+            }
 
-            ToggleModelAction.performed += context => InputHandler.ToggleModel();
-            OpenModelSelectorAction.performed += context => InputHandler.OpenModelSelector();
+            InputActionsInstance.ToggleModelAction.performed += context => InputHandler.ToggleModel();
+            InputActionsInstance.OpenModelSelectorAction.performed += context => InputHandler.OpenModelSelector();
 
-            _inputActionAsset.Enable();
+            InputActionsInstance.Asset.Enable();
+            CustomLogging.Log("Keybinds enabled.");
         }
     }
 }

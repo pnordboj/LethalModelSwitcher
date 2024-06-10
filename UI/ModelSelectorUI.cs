@@ -44,6 +44,12 @@ namespace LethalModelSwitcher.UI
         public static void InitUI(HUDManager __instance)
         {
             CustomLogging.Log("ModelSelectorUI: InitUI called.");
+            
+            if (!plugin.Instance.loadUI)
+            {
+                CustomLogging.Log("ModelSelectorUI: UI loading is disabled.");
+                return;
+            }
 
             if (Instance == null)
             {
@@ -289,7 +295,7 @@ namespace LethalModelSwitcher.UI
             }
             else
             {
-                LethalModelSwitcher.Logger.LogWarning("No model selected to confirm.");
+                plugin.Logger.LogWarning("No model selected to confirm.");
             }
         }
     }

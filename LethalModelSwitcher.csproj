@@ -63,6 +63,9 @@
         <Reference Include="ModelReplacementAPI">
             <HintPath>..\..\References\ModelReplacementAPI.dll</HintPath>
         </Reference>
+        <Reference Include="Unity.Netcode.Runtime">
+          <HintPath>..\..\..\SteamLibrary\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Netcode.Runtime.dll</HintPath>
+        </Reference>
         <Reference Include="UnityEngine">
             <HintPath>..\..\..\SteamLibrary\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.dll</HintPath>
         </Reference>
@@ -71,9 +74,12 @@
         </Reference>
     </ItemGroup>
 
+    <Target Name="NetcodePatch" AfterTargets="PostBuildEvent">
+        <Exec Command="netcode-patch &quot;$(TargetPath)&quot; @(ReferencePathWithRefAssemblies->'&quot;%(Identity)&quot;', ' ')"/>
+    </Target>
+
     <ItemGroup>
       <Folder Include="Assets\" />
       <Folder Include="build\BepInEx\plugins\" />
-      <Folder Include="Patches\" />
     </ItemGroup>
 </Project>

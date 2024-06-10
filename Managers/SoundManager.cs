@@ -9,11 +9,11 @@ public static class SoundManager
         if (clip != null)
         {
             AudioSource.PlayClipAtPoint(clip, position);
-            LethalModelSwitcher.Logger.LogInfo($"Played sound: {clip.name}");
+            plugin.Logger.LogInfo($"Played sound: {clip.name}");
         }
         else
         {
-            LethalModelSwitcher.Logger.LogError("Failed to play sound: clip is null");
+            plugin.Logger.LogError("Failed to play sound: clip is null");
         }
     }
 }

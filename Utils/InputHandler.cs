@@ -3,9 +3,9 @@ using UnityEngine;
 using HarmonyLib;
 using LethalModelSwitcher.Managers;
 using LethalModelSwitcher.UI;
-using LethalNetworkAPI;
 using ModelReplacement;
 using System.Collections.Generic;
+using LethalNetworkAPI;
 
 namespace LethalModelSwitcher.Utils
 {
@@ -14,6 +14,9 @@ namespace LethalModelSwitcher.Utils
     {
         public static bool EnableCycling = true;
         private static Dictionary<string, int> lastSelectedVariants = new Dictionary<string, int>();
+        private static bool isToggling = false;
+        private static float lastToggleTime = 0f;
+        private const float toggleCooldown = 0.5f;
 
         [HarmonyPatch("Start")]
         [HarmonyPostfix]
@@ -28,47 +31,19 @@ namespace LethalModelSwitcher.Utils
         private static void OnLocalClientReady(PlayerControllerB __instance)
         {
             CustomLogging.Log("Initializing local player.");
-
             if (ModelSelectorUI.Instance == null)
             {
-                CustomLogging.LogError("ModelSelectorUI is not initialized, attempting to initialize.");
-
-                if (ModelSelectorUI.Instance == null)
-                {
-                    CustomLogging.LogError("Failed to initialize ModelSelectorUI.");
-                }
-                else
-                {
-                    CustomLogging.Log("ModelSelectorUI initialized successfully.");
-                }
+                CustomLogging.LogError("ModelSelectorUI is not initialized.");
             }
         }
 
         public static void OpenModelSelector()
         {
             CustomLogging.Log("Opening model selector");
-
-            if (ModelSelectorUI.Instance == null)
-            {
-                CustomLogging.LogError("ModelSelectorUI.Instance is not initialized.");
-                return;
-            }
-
             var localPlayer = FindLocalPlayerController();
-            if (localPlayer == null)
-            {
-                CustomLogging.LogError("LocalPlayerController is not initialized.");
-                return;
-            }
+            if (localPlayer == null) return;
 
-            var bodyReplacementBase = localPlayer.GetComponent<BodyReplacementBase>();
-            if (bodyReplacementBase == null)
-            {
-                CustomLogging.LogError("BodyReplacementBase component is not found on the local player.");
-                return;
-            }
-
-            var suitName = bodyReplacementBase.suitName;
+            var suitName = localPlayer.GetComponent<BodyReplacementBase>()?.suitName;
             if (string.IsNullOrEmpty(suitName))
             {
                 CustomLogging.LogError("Suit name is null or empty.");
@@ -101,9 +76,65 @@ namespace LethalModelSwitcher.Utils
             }
         }
 
+        public static void ToggleModel()
+        {
+            if (isToggling || Time.time - lastToggleTime < toggleCooldown)
+            {
+                CustomLogging.Log("ToggleModel: Attempt to toggle too soon or toggle already in progress.");
+                return;
+            }
+
+            CustomLogging.Log("Toggling model");
+            isToggling = true;
+            lastToggleTime = Time.time;
+
+            var localPlayer = FindLocalPlayerController();
+            if (localPlayer == null)
+            {
+                isToggling = false;
+                return;
+            }
+
+            var bodyReplacementBase = localPlayer.GetComponent<BodyReplacementBase>();
+            if (bodyReplacementBase == null)
+            {
+                CustomLogging.LogError("BodyReplacementBase component is not found on the local player.");
+                isToggling = false;
+                return;
+            }
+
+            var suitName = bodyReplacementBase.suitName;
+            if (string.IsNullOrEmpty(suitName))
+            {
+                CustomLogging.LogError("Suit name is null or empty in ToggleModel.");
+                isToggling = false;
+                return;
+            }
+
+            var baseModel = ModelManager.GetBaseModel(suitName);
+            var variants = ModelManager.GetVariants(suitName);
+
+            if (variants != null && variants.Count > 0)
+            {
+                bool isBaseModelActive = baseModel.IsActive;
+                int nextIndex = isBaseModelActive ? 1 : 0;
+                SelectModel(nextIndex, suitName);
+                bodyReplacementBase.name = nextIndex == 0 ? baseModel.Name : variants[nextIndex - 1].Name;
+            }
+            else
+            {
+                OpenModelSelector();
+            }
+
+            CustomLogging.Log($"ToggleModel: suitName={suitName}, currentModelName={bodyReplacementBase.name}");
+            NetworkSync.Instance.ChangeModel(localPlayer.GetClientId(), suitName, bodyReplacementBase.name);
+
+            isToggling = false;
+        }
+        
         public static PlayerControllerB FindLocalPlayerController()
         {
-            foreach (var player in FindObjectsOfType<PlayerControllerB>())
+            foreach (var player in Object.FindObjectsOfType<PlayerControllerB>())
             {
                 if (player.IsOwner)
                 {
@@ -114,99 +145,28 @@ namespace LethalModelSwitcher.Utils
             return null;
         }
 
-        public static void ToggleModel()
-        {
-            CustomLogging.Log("Toggling model");
-
-            var localPlayer = FindLocalPlayerController();
-            if (localPlayer == null)
-            {
-                CustomLogging.LogError("LocalPlayerController is not initialized. Cannot toggle model.");
-                return;
-            }
-
-            var bodyReplacementBase = localPlayer.GetComponent<BodyReplacementBase>();
-            if (bodyReplacementBase == null)
-            {
-                CustomLogging.LogError("BodyReplacementBase component is not found on the local player.");
-                return;
-            }
-
-            var suitName = bodyReplacementBase.suitName;
-            if (string.IsNullOrEmpty(suitName))
-            {
-                CustomLogging.LogError("Suit name is null or empty in ToggleModel.");
-                return;
-            }
-
-            if (!ModelManager.BaseModels.ContainsKey(suitName))
-            {
-                CustomLogging.LogError($"Suit name {suitName} not found in BaseModels.");
-                return;
-            }
-
-            var baseModel = ModelManager.GetBaseModel(suitName);
-            var variants = ModelManager.GetVariants(suitName);
-
-            if (variants != null && variants.Count == 1)
-            {
-                // Toggle between base model and single variant
-                bool isBaseModelActive = baseModel.IsActive;
-                int nextIndex = isBaseModelActive ? 1 : 0;
-
-                if (isBaseModelActive)
-                {
-                    lastSelectedVariants[suitName] = nextIndex;
-                }
-                else
-                {
-                    nextIndex = 0; // Switch to base model
-                }
-
-                SelectModel(nextIndex, suitName);
-            }
-            else
-            {
-                // More than one variant available, open the UI
-                OpenModelSelector();
-            }
-        }
-
         public static void SelectModel(int index, string suitName)
         {
             var localPlayer = FindLocalPlayerController();
-            if (localPlayer == null)
-            {
-                CustomLogging.LogError("LocalPlayerController is not initialized. Cannot select model.");
-                return;
-            }
+            if (localPlayer == null) return;
 
             var bodyReplacementBase = localPlayer.GetComponent<BodyReplacementBase>();
-            if (bodyReplacementBase == null)
-            {
-                CustomLogging.LogError("BodyReplacementBase component is not found on the local player.");
-                return;
-            }
+            if (bodyReplacementBase == null) return;
 
             var baseModel = ModelManager.GetBaseModel(suitName);
             var models = ModelManager.GetVariants(suitName);
 
             if (index == 0)
             {
-                // Activate base model
                 ModelReplacementAPI.SetPlayerModelReplacement(localPlayer, baseModel.Type);
                 baseModel.SetActive(true);
                 models?.ForEach(m => m.SetActive(false));
             }
             else
             {
-                if (index < 0 || index > (models?.Count ?? 0))
-                {
-                    CustomLogging.LogError($"Model index {index} is out of range for suit: {suitName}");
-                    return;
-                }
+                if (index < 0 || index > (models?.Count ?? 0)) return;
 
-                var nextModel = models[index - 1]; // Adjust index for variants list
+                var nextModel = models[index - 1];
                 ModelReplacementAPI.SetPlayerModelReplacement(localPlayer, nextModel.Type);
                 nextModel.SetActive(true);
                 models?.ForEach(m => m.SetActive(false));
@@ -217,7 +177,7 @@ namespace LethalModelSwitcher.Utils
                     Managers.SoundManager.PlaySound(nextModel.Sound, localPlayer.transform.position);
                 }
 
-                SyncManager.SendModelChange(localPlayer.GetClientId(), nextModel.SuitName, nextModel.Name);
+                NetworkSync.Instance.ChangeModel(localPlayer.GetClientId(), suitName, nextModel.Name);
             }
         }
     }
