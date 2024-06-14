@@ -4,7 +4,7 @@
 ## What is Lethal Model Switcher?
 
 This development library is a mod and a tool for developers, it lets users attatch sounds to their models with ease.
-The reason i develop this library was primarily for myself at first as i was developing a Goku mod for Lethal Company.
+The reason i am developing this library was primarily for myself at first as i was developing a Goku mod for Lethal Company.
 Where i wanted to let the user "transform" into super sayian, with transformation and sound etc.
 This became a rather difficult task so while developing the mod and coming real close to being finished, i realised that this could be a tool instead of a single mod.
 A tool that everyone could use and have fun with, so instead i redid everything and
