@@ -1,7 +1,18 @@
 # Not finished yet still WIP
 # Lethal Model Switcher
 
-Thank you for using the Lethal Model Switcher library! This library simplifies the process of switching models in the game Lethal Company. Below are instructions on how to use this library for your own model mod.
+## What is Lethal Model Switcher?
+
+This development library is a mod and a tool for developers, it lets users attatch sounds to their models with ease.
+The reason i develop this library was primarily for myself at first as i was developing a Goku mod for Lethal Company.
+Where i wanted to let the user "transform" into super sayian, with transformation and sound etc.
+This became a rather difficult task so while developing the mod and coming real close to being finished, i realised that this could be a tool instead of a single mod.
+A tool that everyone could use and have fun with, so instead i redid everything and
+renamed it into Lethal Model Switcher - a easy to use tool for developers to develop their model mods.
+
+Features at first release might change, as its under heavy development (Alot of changes happening rapidly)
+The goal is obviously to have all "Upcoming Features" at release but i dont want to promise anything.
+My current goal is to have support for multiple model variants within 1 model, that you can swap between when you want!
 
 ## Features
 - **Model Registration**: Easily register base and variants through the ModelReplacementAPI library
