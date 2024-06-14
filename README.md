@@ -5,15 +5,16 @@ Thank you for using the Lethal Model Switcher library! This library simplifies t
 
 ## Features
 - **Model Registration**: Easily register base and variants through the ModelReplacementAPI library
-- **Dynamic UI**: for selecting and previewing models you want to toggle between
 - **Sound Support**: Attatch sounds when toggling between the models
+- **Accessible**: Easy to use for people that havent touched code before.
 
 ## Upcoming Features
 
-- Enhanced UI for model selection.
-- API for customizing model switching behavior.
-- Support for animations and effects.
-- Better wiki documentation and examples here on GitHub.
+
+- **Dynamic UI**: for selecting and previewing models you want to toggle between
+- **API** for customizing model switching behavior.
+- **Support** for animations and effects.
+- **Better wiki** documentation and examples here on GitHub.
 - General improvements and bug fixes based on user feedback.
 
 ## Using LethalModelSwitcher Library
